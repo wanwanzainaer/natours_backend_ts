@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import fs from 'fs';
+import path from 'path';
 const app = express();
 
 interface tour {
@@ -19,14 +20,18 @@ interface tour {
 }
 
 const tours: tour[] = JSON.parse(
-  fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`).toString()
+  fs
+    .readFileSync(
+      path.join(__dirname, '../', 'dev-data/data/tours-simple.json')
+    )
+    .toString()
 );
 
 app.get('/api/v1/tours', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'success',
     data: {
-      tours: tours,
+      tours,
     },
   });
 });
