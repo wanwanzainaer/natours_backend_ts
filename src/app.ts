@@ -7,7 +7,7 @@ interface tour {
   id: number;
   name: string;
   duration: number;
-  maxGroupSize: 25;
+  maxGroupSize: number;
   difficulty: string;
   ratingsAverage: number;
   ratingsQuantity: number;
@@ -27,13 +27,46 @@ const tours: tour[] = JSON.parse(
     .toString()
 );
 
+app.use(express.json());
+
 app.get('/api/v1/tours', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'success',
+    results: tours.length,
     data: {
       tours,
     },
   });
+});
+app.get('/api/v1/tours/:id', (req: Request, res: Response) => {
+  // + can convert string to int
+  const id = +req.params.id;
+  const tour = tours.find((el) => el.id === id);
+  res.status(200).json({
+    status: 'success',
+    data: {
+      tour,
+    },
+  });
+});
+
+app.post('/api/v1/tours', (req: Request, res: Response) => {
+  const tour = req.body as tour;
+  const newId = tours[tours.length - 1].id + 1;
+  const newTour = { ...tour, id: newId };
+  tours.push(newTour);
+  fs.writeFile(
+    path.join(__dirname, '../', 'dev-data/data/tours-simple.json'),
+    JSON.stringify(tours),
+    (err) => {
+      res.status(201).json({
+        status: 'success',
+        data: {
+          tour: newTour,
+        },
+      });
+    }
+  );
 });
 
 const port = 5000;
