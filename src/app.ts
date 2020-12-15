@@ -1,7 +1,12 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
-const app = express();
+import morgan from 'morgan';
+
+const app: express.Application = express();
+// 1) MIDDLEWARES
+app.use(morgan<Request, Response>('dev'));
+app.use(express.json());
 
 interface tour {
   id: number;
@@ -27,9 +32,7 @@ const tours: tour[] = JSON.parse(
     .toString()
 );
 
-app.use(express.json());
-
-app.get('/api/v1/tours', (req: Request, res: Response) => {
+const getAllTours = (req: Request, res: Response) => {
   res.status(200).json({
     status: 'success',
     results: tours.length,
@@ -37,8 +40,9 @@ app.get('/api/v1/tours', (req: Request, res: Response) => {
       tours,
     },
   });
-});
-app.get('/api/v1/tours/:id', (req: Request, res: Response) => {
+};
+
+const getTour = (req: Request, res: Response) => {
   // + can convert string to int
   const id: number = +req.params.id;
 
@@ -54,9 +58,9 @@ app.get('/api/v1/tours/:id', (req: Request, res: Response) => {
       tour,
     },
   });
-});
+};
 
-app.patch('/api/v1/tours/:id', (req: Request, res: Response) => {
+const updateTour = (req: Request, res: Response) => {
   const id: number = +req.params.id;
   if (id > tours.length) {
     return res.status(404).json({ status: 'fail', message: 'Invalid ID' });
@@ -67,17 +71,9 @@ app.patch('/api/v1/tours/:id', (req: Request, res: Response) => {
       tour: '<Update tour here...>',
     },
   });
-});
+};
 
-app.delete('/api/v1/tours/:id', (req: Request, res: Response) => {
-  const id: number = +req.params.id;
-  if (id > tours.length) {
-    return res.status(404).json({ status: 'fail', message: 'Invalid ID' });
-  }
-  res.status(204).json({ status: 'success', data: null });
-});
-
-app.post('/api/v1/tours', (req: Request, res: Response) => {
+const createTour = (req: Request, res: Response) => {
   const tour = req.body as tour;
   const newId = tours[tours.length - 1].id + 1;
   const newTour = { ...tour, id: newId };
@@ -94,7 +90,28 @@ app.post('/api/v1/tours', (req: Request, res: Response) => {
       });
     }
   );
-});
+};
+const deleteTour = (req: Request, res: Response) => {
+  const id: number = +req.params.id;
+  if (id > tours.length) {
+    return res.status(404).json({ status: 'fail', message: 'Invalid ID' });
+  }
+  res.status(204).json({ status: 'success', data: null });
+};
+
+// app.get('/api/v1/tours', getAllTours);
+// app.post('/api/v1/tours', createTour);
+// app.get('/api/v1/tours/:id', getTour);
+// app.patch('/api/v1/tours/:id', updateTour);
+// app.delete('/api/v1/tours/:id', deleteTour);
+
+app.route('/api/v1/tours').get(getAllTours).post(createTour);
+
+app
+  .route('/api/v1/tours/:id')
+  .get(getTour)
+  .patch(updateTour)
+  .delete(deleteTour);
 
 const port = 5000;
 
