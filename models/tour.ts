@@ -1,29 +1,40 @@
 import mongoose from 'mongoose';
-// export interface TourAttrs {
-//   name: string;
-//   duration: number;
-//   maxGroupSize: number;
-//   difficulty: string;
-//   ratingsAverage: number;
-//   ratingsQuantity: number;
-//   price: number;
-//   summary: string;
-//   description: string;
-//   imageCover: string;
-//   images: string[];
-//   startDates: Date[];
-// }
-
-interface TourAttrs {
+export interface TourAttrs {
   name: string;
-  rating: number;
+  duration: number;
+  maxGroupSize: number;
+  difficulty: string;
+  ratingsAverage: number;
+  ratingsQuantity: number;
   price: number;
+  priceDiscount: number;
+  summary: string;
+  description: string;
+  imageCover: string;
+  images: string[];
+  startDates: Date[];
 }
+
+// interface TourAttrs {
+//   name: string;
+//   rating: number;
+//   price: number;
+// }
 
 interface TourDoc extends mongoose.Document {
   name: string;
-  rating: number;
+  duration: number;
+  maxGroupSize: number;
+  difficulty: string;
+  ratingsAverage: number;
+  ratingsQuantity: number;
   price: number;
+  priceDiscount: number;
+  summary: string;
+  description: string;
+  imageCover: string;
+  images: string[];
+  startDates: Date[];
 }
 
 interface TourModel extends mongoose.Model<TourDoc> {
@@ -32,15 +43,52 @@ interface TourModel extends mongoose.Model<TourDoc> {
 const Schema = mongoose.Schema;
 
 const tourSchema = new Schema({
-  name: { type: String, required: true, unique: true },
-  rating: {
+  name: { type: String, required: true, unique: true, trim: true },
+  ratingsAverage: {
     type: String,
     default: 4.5,
+  },
+  duration: {
+    type: Number,
+    required: [true, 'A tour must have a duration'],
+  },
+  maxGroupSize: {
+    type: Number,
+    required: [true, 'A tour must have group size'],
+  },
+  difficulty: {
+    type: String,
+    required: [true, 'A tour have a difficulty'],
+  },
+  ratingsQuantity: {
+    type: Number,
+    default: 0,
   },
   price: {
     type: Number,
     required: [true, 'A tour must have a price'],
   },
+  priceDiscount: Number,
+  summary: {
+    type: String,
+    trim: true,
+    required: [true, 'A tour must have a summary'],
+  },
+  description: {
+    type: String,
+    trim: true,
+    required: [true, 'A tour must have a description'],
+  },
+  imageCover: {
+    type: String,
+    required: [true, 'A tour must have a cover image'],
+  },
+  images: [{ type: String }],
+  createAt: {
+    type: Date,
+    default: Date.now(),
+  },
+  startDates: [Date],
 });
 
 tourSchema.statics.build = (attrs: TourAttrs) => {
