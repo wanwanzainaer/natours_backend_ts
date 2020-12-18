@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { Tour } from '../models/tour';
+import { TourAttrs, Tour } from '../models/tour';
 
 export const getAllTours = async (req: Request, res: Response) => {
   try {
@@ -64,10 +64,13 @@ export const updateTour = async (req: Request, res: Response) => {
   }
 };
 
-export const createTour = async (req: Request, res: Response) => {
-  const { name, rating, price } = req.body;
+export const createTour = async (
+  // for update to the req.body have the type
+  req: Request<{}, {}, TourAttrs>,
+  res: Response
+) => {
   try {
-    const tour = await Tour.build({ name, rating, price });
+    const tour = await Tour.build({ ...req.body });
     res.status(201).json({
       status: 'success',
       data: {
@@ -77,7 +80,7 @@ export const createTour = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(400).json({
       status: 'fail',
-      message: 'Invalid data sent!',
+      message: err,
     });
   }
 };
