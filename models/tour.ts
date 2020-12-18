@@ -14,13 +14,13 @@ import mongoose from 'mongoose';
 //   startDates: Date[];
 // }
 
-export interface TourAttrs {
+interface TourAttrs {
   name: string;
   rating: number;
   price: number;
 }
 
-export interface TourDoc extends mongoose.Document {
+interface TourDoc extends mongoose.Document {
   name: string;
   rating: number;
   price: number;
@@ -44,7 +44,7 @@ const tourSchema = new Schema({
 });
 
 tourSchema.statics.build = (attrs: TourAttrs) => {
-  return new Tour(attrs);
+  return Tour.create(attrs);
 };
 
 const Tour = mongoose.model<TourDoc, TourModel>('Tour', tourSchema);
