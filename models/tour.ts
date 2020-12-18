@@ -91,6 +91,7 @@ const tourSchema = new Schema({
   startDates: [Date],
 });
 
+//test
 tourSchema.statics.build = (attrs: TourAttrs) => {
   return Tour.create(attrs);
 };
