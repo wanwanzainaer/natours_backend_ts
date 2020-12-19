@@ -1,7 +1,8 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import { app } from './app';
 dotenv.config({ path: './config.env' });
+
+import { app } from './app';
 
 const port = process.env.PORT || 5000;
 
@@ -15,6 +16,7 @@ mongoose
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,
+    useUnifiedTopology: true,
   })
   .then((con) => {
     // console.log(con.connections);
