@@ -5,7 +5,9 @@
   "main": "app.js",
   "scripts": {
     "start": "ts-node-dev --poll src/server.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "created:data": "ts-node-dev dev-data/data/import-dev-data.ts --import",
+    "deleted:data": "ts-node-dev dev-data/data/import-dev-data.ts --delete"
   },
   "keywords": [],
   "author": "",
