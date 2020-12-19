@@ -84,9 +84,10 @@ const tourSchema = new Schema({
     required: [true, 'A tour must have a cover image'],
   },
   images: [{ type: String }],
-  createAt: {
+  createdAt: {
     type: Date,
     default: Date.now(),
+    select: false,
   },
   startDates: [Date],
 });
