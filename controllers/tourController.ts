@@ -1,54 +1,73 @@
 import { NextFunction, Request, Response } from 'express';
-import { TourAttrs, Tour } from '../models/tour';
+import { TourAttrs, TourDoc, Tour } from '../models/tour';
+import { APIFeatures } from '../utils/ApiFeatures';
+export const aliasTopTours = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage,price';
+  req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+  next();
+};
 
 export const getAllTours = async (req: Request, res: Response) => {
   try {
     // BUILD QUERY
     // 1A) Filtering
-    const queryObj = { ...req.query };
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach((el) => delete queryObj[el]);
+    // const queryObj = { ...req.query };
+    // const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    // excludedFields.forEach((el) => delete queryObj[el]);
 
-    // 1B) Advanced filtering
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    // console.log(JSON.parse(queryStr));
-    let query = Tour.find(JSON.parse(queryStr));
+    // // 1B) Advanced filtering
+    // let queryStr = JSON.stringify(queryObj);
+    // queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    // // console.log(JSON.parse(queryStr));
+    // let query = Tour.find(JSON.parse(queryStr));
 
     // 2) Sorting
-    if (req.query.sort) {
-      const sortByStr = req.query.sort as string;
-      const sortBy = sortByStr.split(',').join(' ');
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort('-createdAt');
-    }
+    // if (req.query.sort) {
+    //   const sortByStr = req.query.sort as string;
+    //   const sortBy = sortByStr.split(',').join(' ');
+    //   query = query.sort(sortBy);
+    // } else {
+    //   query = query.sort('-createdAt');
+    // }
 
-    // 3) Field limiting
-    if (req.query.fields) {
-      const fieldsStr = req.query.fields as string;
-      const fields = fieldsStr.split(',').join(' ');
-      query = query.select(fields);
-    } else {
-      query = query.select('-__v');
-    }
+    // // 3) Field limiting
+    // if (req.query.fields) {
+    //   const fieldsStr = req.query.fields as string;
+    //   const fields = fieldsStr.split(',').join(' ');
+    //   query = query.select(fields);
+    // } else {
+    //   query = query.select('-__v');
+    // }
 
     // 4) Pagination
     //must fixed typescript
-    let page = req.query.page || 1;
-    page = +page;
-    let limit = req.query.limit || 100;
-    limit = +limit;
-    const skip = (page - 1) * limit;
-    query = query.skip(skip).limit(limit);
+    // let page = req.query.page || 1;
+    // page = +page;
+    // let limit = req.query.limit || 100;
+    // limit = +limit;
+    // const skip = (page - 1) * limit;
+    // query = query.skip(skip).limit(limit);
 
-    if (req.query.page) {
-      const numTours = await Tour.countDocuments();
-      if (skip >= numTours) throw new Error('This page does not exist');
-    }
+    // if (req.query.page) {
+    //   const numTours = await Tour.countDocuments();
+    //   if (skip >= numTours) throw new Error('This page does not exist');
+    // }
 
     // EXECUTE QUERY
-    const tours = await query;
+    const features = new APIFeatures<TourDoc>(
+      Tour.find(),
+      req.query as { [key: string]: string }
+    )
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    const tours = await features.FetchData();
     // Another approach
     // const tours = await Tour.find()
     //   .where('duration')
