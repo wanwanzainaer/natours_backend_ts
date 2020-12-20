@@ -42,55 +42,65 @@ interface TourModel extends mongoose.Model<TourDoc> {
 }
 const Schema = mongoose.Schema;
 
-const tourSchema = new Schema({
-  name: { type: String, required: true, unique: true, trim: true },
-  ratingsAverage: {
-    type: String,
-    default: 4.5,
+const tourSchema = new Schema(
+  {
+    name: { type: String, required: true, unique: true, trim: true },
+    ratingsAverage: {
+      type: Number,
+      default: 4.5,
+    },
+    duration: {
+      type: Number,
+      required: [true, 'A tour must have a duration'],
+    },
+    maxGroupSize: {
+      type: Number,
+      required: [true, 'A tour must have group size'],
+    },
+    difficulty: {
+      type: String,
+      required: [true, 'A tour have a difficulty'],
+    },
+    ratingsQuantity: {
+      type: Number,
+      default: 0,
+    },
+    price: {
+      type: Number,
+      required: [true, 'A tour must have a price'],
+    },
+    priceDiscount: Number,
+    summary: {
+      type: String,
+      trim: true,
+      required: [true, 'A tour must have a summary'],
+    },
+    description: {
+      type: String,
+      trim: true,
+      required: [true, 'A tour must have a description'],
+    },
+    imageCover: {
+      type: String,
+      required: [true, 'A tour must have a cover image'],
+    },
+    images: [{ type: String }],
+    createdAt: {
+      type: Date,
+      default: Date.now(),
+      select: false,
+    },
+    startDates: [Date],
   },
-  duration: {
-    type: Number,
-    required: [true, 'A tour must have a duration'],
-  },
-  maxGroupSize: {
-    type: Number,
-    required: [true, 'A tour must have group size'],
-  },
-  difficulty: {
-    type: String,
-    required: [true, 'A tour have a difficulty'],
-  },
-  ratingsQuantity: {
-    type: Number,
-    default: 0,
-  },
-  price: {
-    type: Number,
-    required: [true, 'A tour must have a price'],
-  },
-  priceDiscount: Number,
-  summary: {
-    type: String,
-    trim: true,
-    required: [true, 'A tour must have a summary'],
-  },
-  description: {
-    type: String,
-    trim: true,
-    required: [true, 'A tour must have a description'],
-  },
-  imageCover: {
-    type: String,
-    required: [true, 'A tour must have a cover image'],
-  },
-  images: [{ type: String }],
-  createdAt: {
-    type: Date,
-    default: Date.now(),
-    select: false,
-  },
-  startDates: [Date],
-});
+  {
+    // toJSON: {
+    //   transform(doc, ret) {
+    //     ret.id = ret._id;
+    //     delete ret._id;
+    //   },
+    // },
+  }
+);
 
 //test
 tourSchema.statics.build = (attrs: TourAttrs) => {
