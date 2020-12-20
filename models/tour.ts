@@ -21,7 +21,7 @@ export interface TourAttrs {
 //   price: number;
 // }
 
-interface TourDoc extends mongoose.Document {
+export interface TourDoc extends mongoose.Document {
   name: string;
   duration: number;
   maxGroupSize: number;
