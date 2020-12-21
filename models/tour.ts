@@ -1,4 +1,7 @@
-import mongoose from 'mongoose';
+import mongoose, { Query, Aggregate } from 'mongoose';
+import slugify from 'slugify';
+import validator from 'validator';
+
 export interface TourAttrs {
   name: string;
   duration: number;
@@ -7,12 +10,14 @@ export interface TourAttrs {
   ratingsAverage: number;
   ratingsQuantity: number;
   price: number;
+  slug?: string;
   priceDiscount: number;
   summary: string;
   description: string;
   imageCover: string;
   images: string[];
   startDates: Date[];
+  secretTour: boolean;
 }
 
 // interface TourAttrs {
@@ -29,12 +34,14 @@ export interface TourDoc extends mongoose.Document {
   ratingsAverage: number;
   ratingsQuantity: number;
   price: number;
+  slug?: string;
   priceDiscount: number;
   summary: string;
   description: string;
   imageCover: string;
   images: string[];
   startDates: Date[];
+  secretTour: boolean;
 }
 
 interface TourModel extends mongoose.Model<TourDoc> {
@@ -44,9 +51,19 @@ const Schema = mongoose.Schema;
 
 const tourSchema = new Schema(
   {
-    name: { type: String, required: true, unique: true, trim: true },
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      maxlength: [40, 'A tour name must have less or equal then 40 characters'],
+      minlength: [10, 'A tour name must have more or equal then 10 characters'],
+      // validate: [validator.isAlpha, 'Tour name must only contain characters'],
+    },
     ratingsAverage: {
       type: Number,
+      min: 1,
+      max: 5,
       default: 4.5,
     },
     duration: {
@@ -60,7 +77,12 @@ const tourSchema = new Schema(
     difficulty: {
       type: String,
       required: [true, 'A tour have a difficulty'],
+      enum: {
+        values: ['easy', 'medium', 'difficult'],
+        message: 'Difficult is either: easy, medium, difficult',
+      },
     },
+    slug: { type: String },
     ratingsQuantity: {
       type: Number,
       default: 0,
@@ -69,7 +91,15 @@ const tourSchema = new Schema(
       type: Number,
       required: [true, 'A tour must have a price'],
     },
-    priceDiscount: Number,
+    priceDiscount: {
+      type: Number,
+      validate: {
+        validator: function (this: TourDoc): boolean {
+          return this.priceDiscount < this.price;
+        },
+        message: 'Discount price ({VALUE}) should be below regular price',
+      },
+    },
     summary: {
       type: String,
       trim: true,
@@ -91,18 +121,57 @@ const tourSchema = new Schema(
       select: false,
     },
     startDates: [Date],
+    secretTour: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
-    // toJSON: {
-    //   transform(doc, ret) {
-    //     ret.id = ret._id;
-    //     delete ret._id;
-    //   },
-    // },
+    toJSON: {
+      virtuals: true,
+      transform(doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+      },
+    },
+    toObject: { virtuals: true },
   }
 );
+tourSchema.virtual('durationWeeks').get(function (this: TourDoc) {
+  return this.duration / 7;
+});
 
-//test
+//Doucument middleware runs before .save() and .create()
+tourSchema.pre<TourDoc>('save', function (next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+// tourSchema.pre<TourDoc>('save', function (next) {
+//   next();
+// });
+
+// tourSchema.post<TourDoc>('save', function (doc, next) {
+//   console.log(doc);
+//   next();
+// });
+
+// QUERY MIDDLEWARE
+tourSchema.pre<Query<TourDoc[], TourDoc>>(/^find/, function (next) {
+  this.find({ secretTour: { $ne: true } });
+  next(null);
+});
+// tourSchema.post<Query<TourDoc[], TourDoc>>(/^find/, function (docs, next) {
+//   console.log(docs);
+//   next(null);
+// });
+
+// AGGREGATION MIDDLEWARE
+
+tourSchema.pre<Aggregate<TourDoc>>('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  next(null);
+});
+
 tourSchema.statics.build = (attrs: TourAttrs) => {
   return Tour.create(attrs);
 };
