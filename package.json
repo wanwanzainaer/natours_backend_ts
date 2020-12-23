@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/mongodb": "^3.6.3",
     "@types/morgan": "^1.9.2",
     "@types/validator": "^13.1.1",
     "dotenv": "^8.2.0",
