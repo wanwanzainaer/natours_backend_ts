@@ -1,5 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
+import { MongoError } from 'mongodb';
 import { AppError } from '../utils/AppError';
+
+const handleValidationErrorDB = (err: AllError) => {
+  // const errors = Object.values(err.errors).map(el => el.message)
+
+  // const message = `Invalid input data. ${errors}`;
+  const message = `Invalid input data.`;
+
+  return new AppError(message, 400);
+};
+
+// Error type is problem
+const handleCastErrorDB = (err: any) => {
+  const message = `Invalid ${err.path}: ${err.value}`;
+
+  return new AppError(message, 400);
+};
 
 const sendErrorDev = (err: AppError, res: Response) => {
   res.status(err.statusCode).json({
@@ -31,8 +48,19 @@ const sendErrorProd = (err: AppError, res: Response) => {
   }
 };
 
+const handleDuplicateFieldsDB = (err: AllError) => {
+  const value = err.errmsg!.match(/(["'])(?:(?=(\\?))\2.)*?\1/)![0];
+  const message = `Duplicate field value: ${value}. Please use another value!`;
+  return new AppError('message', 400);
+};
+
+type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+
+type MongoExtError = Optional<MongoError, 'hasErrorLabel' | 'errorLabels'>;
+type AllError = AppError & MongoExtError;
+
 export const globalErrorHandler = (
-  err: AppError,
+  err: AllError,
   req: Request,
   res: Response,
   next: NextFunction
@@ -43,6 +71,10 @@ export const globalErrorHandler = (
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, res);
   } else if (process.env.NODE_ENV === 'production') {
+    let error = { ...err };
+    if (error.name === 'CastError') error = handleCastErrorDB(error);
+    if (error.code === 11000) error = handleDuplicateFieldsDB(error);
+    if (err.name === 'ValidationError') error = handleValidationErrorDB(error);
     sendErrorDev(err, res);
   }
 };
