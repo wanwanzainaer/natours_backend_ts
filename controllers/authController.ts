@@ -15,7 +15,7 @@ export const signup = catchAsync(
 
     const token = jwt.sign(
       { id: newUser.id },
-      process.env.JSON_WEBTOKEN_KEY as jwt.Secret,
+      process.env.JWT_SECRET as string,
       {
         expiresIn: process.env.JWT_EXPIRES_IN,
       }
