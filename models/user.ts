@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
 import validator from 'validator';
+import bcrypt from 'bcryptjs';
 
 interface UserAttrs {
   name: string;
   email: string;
   photo?: string;
   password: string;
-  passwordConfirm: string;
+  passwordConfirm: string | undefined;
 }
 
 interface UserDoc extends mongoose.Document {
@@ -14,7 +15,7 @@ interface UserDoc extends mongoose.Document {
   email: string;
   photo?: string;
   password: string;
-  passwordConfirm: string;
+  passwordConfirm: string | undefined;
 }
 
 interface UserModel extends mongoose.Model<UserDoc> {
@@ -52,11 +53,28 @@ const userShcema = new Schema({
   passwordConfirm: {
     type: String,
     required: [true, 'Please Confirm your password'],
+    validate: {
+      // this only work on CREATE and SAVE!!!
+      validator: function (this: UserDoc, el: string): boolean {
+        return this.password === el;
+      },
+      message: 'Password are not the same!',
+    },
   },
   createdAt: {
     type: Date,
     default: Date.now(),
   },
+});
+
+userShcema.pre<UserDoc>('save', async function (next) {
+  // Only run this function if password was actually modified
+  if (!this.isModified('password')) return next();
+
+  // hash the original password and save it
+  this.password = await bcrypt.hash(this.password, 12);
+  this.passwordConfirm = undefined;
+  next();
 });
 
 userShcema.statics.build = (attrs: UserAttrs) => {
