@@ -7,11 +7,11 @@ import {
   createUser,
 } from '../controllers/userController';
 
-import { signup } from '../controllers/authController';
+import { login, signup } from '../controllers/authController';
 const userRouter = express.Router();
 
 userRouter.post('/signup', signup);
-
+userRouter.post('/login', login);
 userRouter.route('/').get(getAllUsers).post(createUser);
 userRouter.route('/:id').get(getUser).patch(updateUser).delete(deleteUser);
 
