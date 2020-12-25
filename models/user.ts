@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcryptjs';
 
-interface UserAttrs {
+export interface UserAttrs {
   name: string;
   email: string;
   photo?: string;
@@ -16,6 +16,7 @@ interface UserDoc extends mongoose.Document {
   photo?: string;
   password: string;
   passwordConfirm: string | undefined;
+  correctPassword(password: string, hash: string): boolean;
 }
 
 interface UserModel extends mongoose.Model<UserDoc> {
@@ -50,6 +51,7 @@ const userShcema = new Schema(
       type: String,
       required: [true, 'A User must have password to save user account safty'],
       minlength: 8,
+      select: false,
     },
     passwordConfirm: {
       type: String,
@@ -87,6 +89,13 @@ userShcema.pre<UserDoc>('save', async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+userShcema.methods.correctPassword = async function (
+  candidatePassword: string,
+  userPassword: string
+) {
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
 
 userShcema.statics.build = (attrs: UserAttrs) => {
   return User.create(attrs);
