@@ -8,15 +8,18 @@ export interface UserAttrs {
   photo?: string;
   password: string;
   passwordConfirm: string | undefined;
+  passwordChangedAt?: Date;
 }
 
-interface UserDoc extends mongoose.Document {
+export interface UserDoc extends mongoose.Document {
   name: string;
   email: string;
   photo?: string;
   password: string;
   passwordConfirm: string | undefined;
+  passwordChangedAt?: Date;
   correctPassword(password: string, hash: string): boolean;
+  changedPasswordAfter(JWTTimestamp: number): boolean;
 }
 
 interface UserModel extends mongoose.Model<UserDoc> {
@@ -68,6 +71,7 @@ const userShcema = new Schema(
       type: Date,
       default: Date.now(),
     },
+    passwordChangedAt: Date,
   },
   {
     toJSON: {
@@ -95,6 +99,17 @@ userShcema.methods.correctPassword = async function (
   userPassword: string
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
+};
+userShcema.methods.changedPasswordAfter = function (
+  this: UserDoc,
+  JWTTimestamp: number
+) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = this.passwordChangedAt.getTime() / 1000;
+    return JWTTimestamp < changedTimestamp;
+  }
+
+  return false;
 };
 
 userShcema.statics.build = (attrs: UserAttrs) => {
