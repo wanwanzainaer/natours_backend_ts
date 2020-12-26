@@ -16,6 +16,7 @@ export interface UserDoc extends mongoose.Document {
   email: string;
   photo?: string;
   password: string;
+  role?: string;
   passwordConfirm: string | undefined;
   passwordChangedAt?: Date;
   correctPassword(password: string, hash: string): boolean;
@@ -49,6 +50,11 @@ const userShcema = new Schema(
     },
     photo: {
       type: String,
+    },
+    role: {
+      type: String,
+      enum: ['user', 'guide', 'admin', 'lead-guide'],
+      default: 'user',
     },
     password: {
       type: String,
