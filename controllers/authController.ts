@@ -1,8 +1,13 @@
-import jwt from 'jsonwebtoken';
+import jwt, { Secret, SignOptions, verify } from 'jsonwebtoken';
+import { promisify } from 'util';
 import { NextFunction, Response, Request } from 'express';
-import { User, UserAttrs } from '../models/user';
+import { UserDoc, User, UserAttrs } from '../models/user';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
+
+interface AuthRequestUser extends Request {
+  user?: UserDoc;
+}
 
 const signToken = (id: string) => {
   return jwt.sign({ id }, process.env.JWT_SECRET as string, {
@@ -11,7 +16,7 @@ const signToken = (id: string) => {
 };
 
 export const signup = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthRequestUser, res: Response, next: NextFunction) => {
     const { name, email, password, passwordConfirm } = req.body;
     const newUser = await User.build({
       name,
@@ -54,5 +59,47 @@ export const login = catchAsync(
       status: 'success',
       token,
     });
+  }
+);
+
+export const protect = catchAsync(
+  async (req: AuthRequestUser, res: Response, next: NextFunction) => {
+    // 1) Getting token and check of it's there
+    let token: string | undefined;
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token)
+      return next(
+        new AppError('You are not login, please log in to get access', 401)
+      );
+    // 2) Verification token
+
+    const decodeToken = await promisify<string, Secret, any>(verify)(
+      token,
+      process.env.JWT_SECRET!
+    );
+    const { id, iat } = decodeToken as { id: string; iat: number };
+
+    // 3) Check if user still exists
+    const currentUser = await User.findById(id);
+    if (!currentUser)
+      return next(
+        new AppError(
+          'The user beloning to this token does no longer exists',
+          401
+        )
+      );
+    // 4) Check if user changed password after the token was issued
+    if (currentUser.changedPasswordAfter(iat))
+      return next(
+        new AppError('User recently changed password! Please log in again', 401)
+      );
+
+    req.user = currentUser;
+    next();
   }
 );
