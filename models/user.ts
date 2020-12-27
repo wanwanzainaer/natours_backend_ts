@@ -106,6 +106,13 @@ userShcema.pre<UserDoc>('save', async function (next) {
   next();
 });
 
+userShcema.pre<UserDoc>('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = new Date();
+  next();
+});
+
 userShcema.methods.correctPassword = async function (
   candidatePassword: string,
   userPassword: string
