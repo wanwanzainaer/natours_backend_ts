@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import mongoose from 'mongoose';
+import mongoose, { Query } from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcryptjs';
 
@@ -22,6 +22,7 @@ export interface UserDoc extends mongoose.Document {
   passwordChangedAt?: Date;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
+  active?: boolean;
   correctPassword(password: string, hash: string): boolean;
   changedPasswordAfter(JWTTimestamp: number): boolean;
   createPasswordResetToken(): string;
@@ -84,6 +85,11 @@ const userShcema = new Schema(
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
+    },
   },
   {
     toJSON: {
@@ -111,6 +117,12 @@ userShcema.pre<UserDoc>('save', function (next) {
 
   this.passwordChangedAt = new Date();
   next();
+});
+
+userShcema.pre<Query<UserDoc[], UserDoc>>(/^find/, function (next) {
+  // this points to the current query
+  this.find({ active: { $ne: false } });
+  next(null);
 });
 
 userShcema.methods.correctPassword = async function (
