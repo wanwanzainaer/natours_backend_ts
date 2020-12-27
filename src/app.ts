@@ -3,6 +3,7 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
+import hpp from 'hpp';
 // import xss from 'xss-clean';
 
 import { globalErrorHandler } from '../controllers/errorController';
@@ -34,6 +35,20 @@ app.use(express.json({ limit: '10kb' }));
 app.use(mongoSanitize());
 // Data sanitization against XSS
 // app.use(xss())
+
+// Prevent parameter pollution
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'maxGroupSize',
+      'price',
+      'ratingsAverage',
+      'difficulty',
+    ],
+  })
+);
 
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
