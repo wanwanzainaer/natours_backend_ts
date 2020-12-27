@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import mongoose from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcryptjs';
@@ -19,8 +20,11 @@ export interface UserDoc extends mongoose.Document {
   role?: string;
   passwordConfirm: string | undefined;
   passwordChangedAt?: Date;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
   correctPassword(password: string, hash: string): boolean;
   changedPasswordAfter(JWTTimestamp: number): boolean;
+  createPasswordResetToken(): string;
 }
 
 interface UserModel extends mongoose.Model<UserDoc> {
@@ -78,6 +82,8 @@ const userShcema = new Schema(
       default: Date.now(),
     },
     passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
   },
   {
     toJSON: {
@@ -116,6 +122,18 @@ userShcema.methods.changedPasswordAfter = function (
   }
 
   return false;
+};
+userShcema.methods.createPasswordResetToken = function (): string {
+  const resetToken = crypto.pseudoRandomBytes(32).toString('hex');
+
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
 };
 
 userShcema.statics.build = (attrs: UserAttrs) => {
