@@ -7,7 +7,7 @@ import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
 import { sendEmail } from '../utils/email';
 
-interface AuthRequestUser extends Request {
+export interface AuthRequestUser extends Request {
   user?: UserDoc;
 }
 
