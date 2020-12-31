@@ -1,6 +1,5 @@
 import mongoose, { Query, Aggregate } from 'mongoose';
 import slugify from 'slugify';
-import validator from 'validator';
 
 export interface TourAttrs {
   name: string;
@@ -18,6 +17,21 @@ export interface TourAttrs {
   images: string[];
   startDates: Date[];
   secretTour: boolean;
+  startLocation: {
+    type: string;
+    description: string;
+    coordinates: [number];
+    address: string;
+  };
+  location: [
+    {
+      type: string;
+      coordinates: [number];
+      address: string;
+      description: string;
+      day: number;
+    }
+  ];
 }
 
 // interface TourAttrs {
@@ -42,6 +56,21 @@ export interface TourDoc extends mongoose.Document {
   images: string[];
   startDates: Date[];
   secretTour: boolean;
+  startLocation: {
+    type: string;
+    description: string;
+    coordinates: [number];
+    address: string;
+  };
+  location: [
+    {
+      type: string;
+      coordinates: [number];
+      address: string;
+      description: string;
+      day: number;
+    }
+  ];
 }
 
 interface TourModel extends mongoose.Model<TourDoc> {
@@ -127,7 +156,17 @@ const tourSchema = new Schema(
     },
 
     //typescript
-
+    startLocation: {
+      // GeoJSON
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
     locations: [
       {
         type: {
