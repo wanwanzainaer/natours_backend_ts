@@ -1,6 +1,6 @@
 import mongoose, { Query, Aggregate } from 'mongoose';
 import slugify from 'slugify';
-
+import { UserDoc } from './user';
 export interface TourAttrs {
   name: string;
   duration: number;
@@ -17,13 +17,13 @@ export interface TourAttrs {
   images: string[];
   startDates: Date[];
   secretTour: boolean;
-  startLocation: {
+  startLocation?: {
     type: string;
     description: string;
     coordinates: [number];
     address: string;
   };
-  location: [
+  location?: [
     {
       type: string;
       coordinates: [number];
@@ -56,13 +56,13 @@ export interface TourDoc extends mongoose.Document {
   images: string[];
   startDates: Date[];
   secretTour: boolean;
-  startLocation: {
+  startLocation?: {
     type: string;
     description: string;
     coordinates: [number];
     address: string;
   };
-  location: [
+  location?: [
     {
       type: string;
       coordinates: [number];
@@ -180,6 +180,7 @@ const tourSchema = new Schema(
         day: Number,
       },
     ],
+    guides: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
   {
     toJSON: {
@@ -201,6 +202,12 @@ tourSchema.pre<TourDoc>('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
+
+// tourSchema.pre<TourDoc>('save', async function (next) {
+//   const guidesPromises = this.guides.map((id) => await User.findById(id));
+//  this.guides =  await Promise.all(guidesPromises);
+//   next(null);
+// });
 // tourSchema.pre<TourDoc>('save', function (next) {
 //   next();
 // });
@@ -212,7 +219,17 @@ tourSchema.pre<TourDoc>('save', function (next) {
 
 // QUERY MIDDLEWARE
 tourSchema.pre<Query<TourDoc[], TourDoc>>(/^find/, function (next) {
-  this.find({ secretTour: { $ne: true } });
+  this.find({ secretTour: { $ne: false } });
+
+  next(null);
+});
+
+// Do the query populate all document
+tourSchema.pre<Query<TourDoc[], TourDoc>>(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
   next(null);
 });
 // tourSchema.post<Query<TourDoc[], TourDoc>>(/^find/, function (docs, next) {
