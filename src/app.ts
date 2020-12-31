@@ -10,6 +10,7 @@ import { globalErrorHandler } from '../controllers/errorController';
 import { tourRouter } from '../routes/tourRoutes';
 import { userRouter } from '../routes/userRoutes';
 import { AppError } from '../utils/AppError';
+import { reviewRouter } from '../routes/reviewRoutes';
 
 const app: express.Application = express();
 // 1) GLOBAL MIDDLEWARES
@@ -52,6 +53,7 @@ app.use(
 
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
 //handle the Not found the url handler
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));

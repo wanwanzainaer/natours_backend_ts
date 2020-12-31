@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Query } from 'mongoose';
 
 const Schema = mongoose.Schema;
 
@@ -62,6 +62,15 @@ const reviewSchema = new Schema(
 reviewSchema.statics.build = (attrs: ReviewAttrs) => {
   return Review.create(attrs);
 };
+
+reviewSchema.pre<Query<ReviewDoc[], ReviewDoc>>(/^find/, function (next) {
+  this.populate({ path: 'tour', select: 'name' }).populate({
+    path: 'user',
+    select: 'name photo',
+  });
+
+  next(null);
+});
 
 export const Review = mongoose.model<ReviewDoc, ReviewModel>(
   'Review',
