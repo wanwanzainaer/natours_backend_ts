@@ -197,6 +197,13 @@ tourSchema.virtual('durationWeeks').get(function (this: TourDoc) {
   return this.duration / 7;
 });
 
+// Virtual populate
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+
 //Doucument middleware runs before .save() and .create()
 tourSchema.pre<TourDoc>('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
