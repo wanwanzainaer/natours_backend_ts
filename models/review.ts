@@ -64,7 +64,12 @@ reviewSchema.statics.build = (attrs: ReviewAttrs) => {
 };
 
 reviewSchema.pre<Query<ReviewDoc[], ReviewDoc>>(/^find/, function (next) {
-  this.populate({ path: 'tour', select: 'name' }).populate({
+  // this.populate({ path: 'tour', select: 'name' }).populate({
+  //   path: 'user',
+  //   select: 'name photo',
+  // });
+
+  this.populate({
     path: 'user',
     select: 'name photo',
   });

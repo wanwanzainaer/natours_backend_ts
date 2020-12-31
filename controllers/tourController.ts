@@ -90,7 +90,9 @@ export const getTour = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     // + can convert string to int
     const id: string = req.params.id;
-    const tour = await Tour.findById('5fed7e43da64707435326d01');
+    const tour = await Tour.findById('5fed7e43da64707435326d01').populate(
+      'reviews'
+    );
     if (!tour) return next(new AppError('No tour found with that ID', 404));
     res.status(200).json({
       status: 'success',
