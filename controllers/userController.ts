@@ -4,6 +4,7 @@ import { catchAsync } from '../utils/catchAsync';
 import { APIFeatures } from '../utils/ApiFeatures';
 import { AppError } from '../utils/AppError';
 import { AuthRequestUser } from './authController';
+import { deleteOne, getAll, getOne, updateOne } from './handlerFactory';
 
 const filterObj = (
   obj: { [key: string]: string },
@@ -17,20 +18,6 @@ const filterObj = (
   });
   return newObj;
 };
-
-export const getAllUsers = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const users = await User.find({});
-
-    res.status(200).json({
-      status: 'success',
-      result: users.length,
-      data: {
-        users,
-      },
-    });
-  }
-);
 
 export const updateMe = catchAsync(
   async (req: AuthRequestUser, res: Response, next: NextFunction) => {
@@ -71,27 +58,13 @@ export const deleteMe = catchAsync(
   }
 );
 
-export const getUser = (req: Request, res: Response) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined',
-  });
-};
+export const getUser = getOne(User);
 export const createUser = (req: Request, res: Response) => {
   res.status(500).json({
     status: 'error',
-    message: 'This route is not yet defined',
+    message: 'This route is not defined! Please use sign up instead',
   });
 };
-export const updateUser = (req: Request, res: Response) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined',
-  });
-};
-export const deleteUser = (req: Request, res: Response) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined',
-  });
-};
+export const getAllUsers = getAll(User);
+export const updateUser = updateOne(User);
+export const deleteUser = deleteOne(User);
