@@ -17,6 +17,9 @@ import {
   signup,
   updatePassword,
 } from '../controllers/authController';
+
+import { restrictTo } from '../controllers/authController';
+
 const userRouter = express.Router();
 
 userRouter.post('/signup', signup);

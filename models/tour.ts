@@ -226,7 +226,7 @@ tourSchema.pre<TourDoc>('save', function (next) {
 
 // QUERY MIDDLEWARE
 tourSchema.pre<Query<TourDoc[], TourDoc>>(/^find/, function (next) {
-  this.find({ secretTour: { $ne: false } });
+  this.find({ secretTour: { $ne: true } });
 
   next(null);
 });
