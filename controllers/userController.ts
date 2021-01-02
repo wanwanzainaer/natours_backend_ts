@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import { UserAttrs, User } from '../models/user';
+import { User } from '../models/user';
 import { catchAsync } from '../utils/catchAsync';
-import { APIFeatures } from '../utils/ApiFeatures';
 import { AppError } from '../utils/AppError';
 import { AuthRequestUser } from './authController';
 import { deleteOne, getAll, getOne, updateOne } from './handlerFactory';
@@ -59,12 +58,13 @@ export const deleteMe = catchAsync(
 );
 
 export const getUser = getOne(User);
+export const getAllUsers = getAll(User);
+export const updateUser = updateOne(User);
+export const deleteUser = deleteOne(User);
+
 export const createUser = (req: Request, res: Response) => {
   res.status(500).json({
     status: 'error',
     message: 'This route is not defined! Please use sign up instead',
   });
 };
-export const getAllUsers = getAll(User);
-export const updateUser = updateOne(User);
-export const deleteUser = deleteOne(User);
