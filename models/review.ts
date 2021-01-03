@@ -1,4 +1,5 @@
 import mongoose, { Query } from 'mongoose';
+import { Tour } from './tour';
 
 const Schema = mongoose.Schema;
 
@@ -18,6 +19,7 @@ export interface ReviewDoc extends mongoose.Document {
 
 interface ReviewModel extends mongoose.Model<ReviewDoc> {
   build(attrs: ReviewAttrs): ReviewDoc;
+  calcAverageRatings(tourId: string): void;
 }
 
 const reviewSchema = new Schema(
@@ -75,6 +77,31 @@ reviewSchema.pre<Query<ReviewDoc[], ReviewDoc>>(/^find/, function (next) {
   });
 
   next(null);
+});
+
+reviewSchema.statics.calcAverageRatings = async function (tourId: string) {
+  const stats = await this.aggregate([
+    { $match: { tour: tourId } },
+    {
+      $group: {
+        _id: '$tour',
+        nRating: { $sum: 1 },
+        avgRating: { $avg: '$rating' },
+      },
+    },
+  ]);
+  console.log(stats);
+  await Tour.findByIdAndUpdate(tourId, {
+    ratingsQuantity: stats[0].nRating,
+    ratingsAverage: stats[0].avgRating,
+  });
+};
+
+reviewSchema.post<ReviewDoc>('save', function () {
+  // This point to current review
+  // point
+  // this.constructor
+  Review.calcAverageRatings(this.tour);
 });
 
 export const Review = mongoose.model<ReviewDoc, ReviewModel>(
