@@ -17,6 +17,10 @@ export interface ReviewDoc extends mongoose.Document {
   user: string;
 }
 
+export interface ReviewQuery extends Query<ReviewDoc, ReviewDoc> {
+  r?: ReviewDoc;
+}
+
 interface ReviewModel extends mongoose.Model<ReviewDoc> {
   build(attrs: ReviewAttrs): ReviewDoc;
   calcAverageRatings(tourId: string): void;
@@ -33,6 +37,7 @@ const reviewSchema = new Schema(
       min: 1,
       max: 5,
       required: [true, 'A review must have rating'],
+      set: (val: number) => Math.round(val * 10) / 10,
     },
     createdAt: {
       type: Date,
@@ -60,6 +65,8 @@ const reviewSchema = new Schema(
     toObject: { virtuals: true },
   }
 );
+
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
 
 reviewSchema.statics.build = (attrs: ReviewAttrs) => {
   return Review.create(attrs);
@@ -90,11 +97,12 @@ reviewSchema.statics.calcAverageRatings = async function (tourId: string) {
       },
     },
   ]);
-  console.log(stats);
-  await Tour.findByIdAndUpdate(tourId, {
-    ratingsQuantity: stats[0].nRating,
-    ratingsAverage: stats[0].avgRating,
-  });
+
+  if (stats.length > 0)
+    await Tour.findByIdAndUpdate(tourId, {
+      ratingsQuantity: stats[0].nRating,
+      ratingsAverage: stats[0].avgRating,
+    });
 };
 
 reviewSchema.post<ReviewDoc>('save', function () {
@@ -102,6 +110,16 @@ reviewSchema.post<ReviewDoc>('save', function () {
   // point
   // this.constructor
   Review.calcAverageRatings(this.tour);
+});
+
+reviewSchema.pre<ReviewQuery>(/^findOneAnd/, async function (next) {
+  this.r = (await this.findOne()) || undefined;
+  next(null);
+});
+
+reviewSchema.post<ReviewQuery>(/^findOneAnd/, async function () {
+  // await this.findOne(); does NOT work here, query has already executed
+  await Review.calcAverageRatings(this.r!.tour);
 });
 
 export const Review = mongoose.model<ReviewDoc, ReviewModel>(
