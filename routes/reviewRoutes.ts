@@ -10,15 +10,16 @@ import { protect, restrictTo } from '../controllers/authController';
 import { Router } from 'express';
 const reviewRouter = Router({ mergeParams: true });
 
+reviewRouter.use(protect);
 reviewRouter
   .route('/')
   .get(getAllReviews)
-  .post(protect, restrictTo('user'), setTourUserId, createReview);
+  .post(restrictTo('user'), setTourUserId, createReview);
 
 reviewRouter
   .route('/:id')
-  .delete(deleteReview)
-  .patch(updateReview)
+  .delete(restrictTo('user', 'admin'), deleteReview)
+  .patch(restrictTo('user', 'admin'), updateReview)
   .get(getReview);
 
 export { reviewRouter };
