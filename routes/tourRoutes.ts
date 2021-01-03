@@ -8,6 +8,8 @@ import {
   aliasTopTours,
   getTourStats,
   getMonthlyPlan,
+  getToursWithin,
+  getDistances,
 } from '../controllers/tourController';
 import { protect, restrictTo } from '../controllers/authController';
 import { reviewRouter } from './reviewRoutes';
@@ -21,6 +23,13 @@ tourRouter.route('/tour-stats').get(getTourStats);
 tourRouter
   .route('/monthly-plan/:year')
   .get(protect, restrictTo('admin', 'lead-guide', 'guide'), getMonthlyPlan);
+
+tourRouter.route('/distances/:latlng/unit/:unit').get(getDistances);
+
+tourRouter
+  .route('/tours-within/:distance/center/:latlng/unit/:unit')
+  .get(getToursWithin);
+
 tourRouter
   .route('/')
   .get(protect, getAllTours)

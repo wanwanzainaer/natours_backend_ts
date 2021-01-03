@@ -196,6 +196,8 @@ const tourSchema = new Schema(
 // tourSchema.index({ price: 1 });
 tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
+//for GeoJson DATA Index
+tourSchema.index({ startLocation: '2dsphere' });
 
 tourSchema.virtual('durationWeeks').get(function (this: TourDoc) {
   return this.duration / 7;
@@ -250,10 +252,10 @@ tourSchema.pre<Query<TourDoc[], TourDoc>>(/^find/, function (next) {
 
 // AGGREGATION MIDDLEWARE
 
-tourSchema.pre<Aggregate<TourDoc>>('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  next(null);
-});
+// tourSchema.pre<Aggregate<TourDoc>>('aggregate', function (next) {
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//   next(null);
+// });
 
 tourSchema.statics.build = (attrs: TourAttrs) => {
   return Tour.create(attrs);
