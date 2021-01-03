@@ -193,6 +193,10 @@ const tourSchema = new Schema(
     toObject: { virtuals: true },
   }
 );
+// tourSchema.index({ price: 1 });
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 });
+
 tourSchema.virtual('durationWeeks').get(function (this: TourDoc) {
   return this.duration / 7;
 });
