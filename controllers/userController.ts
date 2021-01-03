@@ -18,6 +18,15 @@ const filterObj = (
   return newObj;
 };
 
+export const getMe = (
+  req: AuthRequestUser,
+  res: Response,
+  next: NextFunction
+) => {
+  req.params.id = req.user!.id!;
+  next();
+};
+
 export const updateMe = catchAsync(
   async (req: AuthRequestUser, res: Response, next: NextFunction) => {
     const { password, passwordConfirm } = req.body;
